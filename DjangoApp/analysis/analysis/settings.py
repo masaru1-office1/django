@@ -24,8 +24,8 @@ SECRET_KEY = 'pkg5+--&-k0=o5*up^+bw7_%)+n59q3+pvy=wohe_red#n!(5('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['34.70.194.22']
+#ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -57,6 +57,7 @@ ROOT_URLCONF = 'analysis.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+#        'BACKEND': 'django.db.backends.mysql',
         'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -123,3 +124,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 X_FRAME_OPTIONS = 'SAMEORIGIN'
+

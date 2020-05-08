@@ -18,9 +18,8 @@ from django_plotly_dash import DjangoDash
 #from .urls import app_name
 populatoin_passenger_app = DjangoDash(name='populatoin_passenger_app')
 
-
 #for passengers
-file_name = r'data\S12-18_GML\train_passenger.csv'
+file_name = os.getcwd() + os.sep + r'data/S12-18_GML/train_passenger.csv'
 df = pd.read_csv(file_name,sep='\t')
 
 
@@ -30,7 +29,7 @@ geodf = []
 # for pref_num in range(8,15,1):
 for pref_num in [13]:
     pref_num = str(pref_num).zfill(2)
-    pop_shp = r'data\1km_mesh_suikei_2018_shape_' + pref_num + r'\1km_mesh_2018_' + pref_num + '.shp'
+    pop_shp = r'data/1km_mesh_suikei_2018_shape_' + pref_num + r'/1km_mesh_2018_' + pref_num + '.shp'
     if len(geodf)==0:
         geodf = gpd.read_file(pop_shp)
     else:
