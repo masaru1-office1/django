@@ -15,6 +15,11 @@ import dash_html_components as html
 from dash.dependencies import Input, Output, State
 from django_plotly_dash import DjangoDash
 
+#setting
+fw = 60
+fig_width = str(fw) + '%'
+rest_width = str(100 - fw - 5) + '%'
+
 #from .urls import app_name
 population_passenger_app = DjangoDash(name='population_passenger_app')
 
@@ -51,10 +56,9 @@ for feature in geo_area["features"]:
     i += 1
 
 #for visualization
-# app = dash.Dash()
 colors = {
-    'background': '#111111',
-    'text': '#7FDBFF',
+    'background': 'rgb(20,0,121)',
+    'text': 'rgb(255, 255, 255)',
 }
 styles = {
     'pre': {
@@ -73,23 +77,32 @@ population_passenger_app.layout = html.Div(children=[
                 }
             ),
 
-            html.Label('Seclect year for population',
-                    style={
-                    'color': colors['text']
-                }),
+            ],
+            style={'backgroundColor': colors['background']}),
+        html.Div(className="inline-block_test",children=[
+            dcc.Loading(
+                id="loading-1",
+                children=[html.Div(dcc.Graph(id='population-passenger-graph')),
+                ],
+                type="default",
+                ),
+
+            dcc.Markdown("""
+                **Seclect year for population**
+                """),
             html.P(
-            dcc.RangeSlider(
-                id = 'year_population',
-                min=2020,
-                max=2050,
-                step=5,
-                marks={i: i for i in range(2020,2051,5)},
-                value=[2020,2035]
-            )),
-            html.Label('Seclect year for train passengers',
-                    style={
-                    'color': colors['text']
-                }),
+                dcc.RangeSlider(
+                    id = 'year_population',
+                    min=2020,
+                    max=2050,
+                    step=5,
+                    marks={i: i for i in range(2020,2051,5)},
+                    value=[2020,2035]
+
+                )),
+            dcc.Markdown("""
+                **Seclect year for train passengers**
+                """),
             html.P(
             dcc.RangeSlider(
                 id = 'year_passenger',
@@ -99,84 +112,20 @@ population_passenger_app.layout = html.Div(children=[
                 marks={i: i for i in range(2011,2018,1)},
                 value=[2016,2017]
             )),
-        ],
-        
-        
-        
-        style={'backgroundColor': colors['background']}),
-
-        html.Div(children=[
-            dcc.Loading(
-                id="loading-1",
-                children=[html.Div(dcc.Graph(id='population-passenger-graph')),
-                ],
-                type="default",
-                ),
-
-        html.Div(className='row', children=[
-                html.Div([
-                    dcc.Markdown("""
-                        **Hover Data**
-
-                        Mouse over values in the graph.
-                    """),
-                    html.Pre(id='hover-data', style=styles['pre'])
-                ], className='three columns'),
-
-                html.Div([
-                    dcc.Markdown("""
-                        **Click Data**
-
-                        Click on points in the graph.
-                    """),
-                    html.Pre(id='click-data', style=styles['pre']),
-                ], className='three columns'),
-
-                html.Div([
-                    dcc.Markdown("""
-                        **Selection Data**
-
-                        Choose the lasso or rectangle tool in the graph's menu
-                        bar and then select points in the graph.
-
-                        Note that if `layout.clickmode = 'event+select'`, selection data also 
-                        accumulates (or un-accumulates) selected data if you hold down the shift
-                        button while clicking.
-                    """),
-                    html.Pre(id='selected-data', style=styles['pre']),
-                ], className='three columns'),
-
-                html.Div([
-                    dcc.Markdown("""
-                        **Zoom and Relayout Data**
-
-                        Click and drag on the graph to zoom or click on the zoom
-                        buttons in the graph's menu bar.
-                        Clicking on legend items will also fire
-                        this event.
-                    """),
-                    html.Pre(id='relayout-data', style=styles['pre']),
-                ], className='three columns')
-            ])
-
-        ],
-        
-        
-        
-        
-        
+            ],style={'width': fig_width, 'display': 'inline-block', 'vertical-align':'top'}
         ),
-
-        # html.Div(className='row', children=[
-        #     html.Div([
-        #         dcc.Markdown("""
-        #             **Hover Data**
-
-        #             Mouse over values in the graph.
-        #         """),
-        #         html.Pre(id='hover-data', style=styles['pre'])
-        #     ], className='three columns'),
-        # ]),
+        html.Div(className="inline-block_test",children=[
+            dcc.Markdown("""
+                **Hover Data**
+            """),
+            dcc.Graph(id='hover-data'),
+            dcc.Markdown("""
+                **Click Data**
+            """),
+            dcc.Graph(id='click-data'),
+            ],
+            style={'width': rest_width, 'display': 'inline-block', 'vertical-align':'top'}
+        ),
     ],
 )
 color1 = "rgb(156, 181, 255)"
@@ -270,34 +219,79 @@ def update_glagh(year_population,year_passsenger):
                     ))
     fig.add_trace(fig2.data[0])
 
-
     fig.update_layout(mapbox_style="carto-positron",
                     mapbox_zoom=8, mapbox_center = {"lat": 35.7, "lon": 139.7},
-                    height = 600)
+                    height = 600,
+                    margin=dict(l=20, r=0, t=25, b=0),
+                    )
+
     return fig
 
+
+def linechart(pointData):
+    if pointData is None:
+        return {'data':'','layout':''}
+    else:
+        curveNum = pointData['points'][0]['curveNumber']
+        txt = pointData['points'][0]['text']
+
+        if curveNum == 0:        
+            row = int(txt.split('<br>')[0].split(' ')[1])
+            data = [dict(
+                    x = [i for i in range(2020,2051,5)],
+                    y = [geodf.iloc[row]['PTN_' + str(year)] for year in range(2020,2051,5)],
+                    mode = 'lines+markers',
+                )]
+            layout = {
+                    'height': 350,
+                    'margin': {'l': 55, 'b': 30, 'r': 10, 't': 15},
+                    'annotations': [{
+                        'x': 0, 'y': 0.95, 'xanchor': 'left', 'yanchor': 'bottom',
+                        'xref': 'paper', 'yref': 'paper', 'showarrow': False,
+                        'align': 'left', 'bgcolor': 'rgba(255, 255, 255, 0.5)',
+                        'text': 'Populatioin',
+                    }],
+                    'xaxis': {'showgrid': False,'title': 'Year'},
+                    'yaxis': {'type': 'linear','title': 'Population'},
+                    
+                }
+        elif curveNum ==1:
+            station_name = txt.split('<br>')[0]
+            row = int(txt.split('<br>')[1].split(' ')[1])
+            data = [dict(
+                    x = [i for i in range(2011,2018,1)],
+                    y = [df.iloc[row]['乗降客数' + str(year)] for year in range(2011,2018,1)],
+                    mode = 'lines+markers',
+                )]
+            layout = {
+                    'height': 350,
+                    'margin': {'l': 55, 'b': 30, 'r': 10, 't': 15},
+                    'annotations': [{
+                        'x': 0, 'y': 0.95, 'xanchor': 'left', 'yanchor': 'bottom',
+                        'xref': 'paper', 'yref': 'paper', 'showarrow': False,
+                        'align': 'left', 'bgcolor': 'rgba(255, 255, 255, 0.5)',
+                        'text': 'Train Passenger ' + station_name,
+                    }],
+                    'xaxis': {'showgrid': False,'title': 'Year'},
+                    'yaxis': {'type': 'linear','title': 'Passengers'},
+                    
+                }
+            
+        return {
+            'data':data,
+            'layout': layout
+        }
+
 @population_passenger_app.callback(
-    Output('hover-data', 'children'),
+    Output('hover-data', 'figure'),
     [Input('population-passenger-graph', 'hoverData')])
 def display_hover_data(hoverData):
-    return json.dumps(hoverData, indent=2)
+    return linechart(hoverData)
 
 @population_passenger_app.callback(
-    Output('click-data', 'children'),
+    Output('click-data', 'figure'),
     [Input('population-passenger-graph', 'clickData')])
 def display_click_data(clickData):
-    return json.dumps(clickData, indent=2)
-
-@population_passenger_app.callback(
-    Output('selected-data', 'children'),
-    [Input('population-passenger-graph', 'selectedData')])
-def display_selected_data(selectedData):
-    return json.dumps(selectedData, indent=2)
-
-@population_passenger_app.callback(
-    Output('relayout-data', 'children'),
-    [Input('population-passenger-graph', 'relayoutData')])
-def display_relayout_data(relayoutData):
-    return json.dumps(relayoutData, indent=2)
+    return linechart(clickData)
 
 # population_passenger_app.run_server()

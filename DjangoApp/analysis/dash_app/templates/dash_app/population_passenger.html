@@ -4,14 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {%load plotly_dash%}
+    {%load static%}
+    <link rel="stylesheet" type="text/css" href="{% static 'dash_app/dash_apps.css' %}">
     <title>Population And Passenger</title>
 </head>
 <body>
-    <div class="card border-dark">
-        <div class="card-body">
-            
-            {%plotly_app name="population_passenger_app" ratio=1 %}
-        </div>
-    </div>
+    {%plotly_app name="population_passenger_app" ratio=1 %}
 </body>
 </html>
