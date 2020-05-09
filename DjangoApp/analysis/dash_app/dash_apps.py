@@ -16,27 +16,25 @@ from dash.dependencies import Input, Output, State
 from django_plotly_dash import DjangoDash
 
 #from .urls import app_name
-populatoin_passenger_app = DjangoDash(name='populatoin_passenger_app')
+population_passenger_app = DjangoDash(name='population_passenger_app')
 
 #for passengers
-file_name = os.getcwd() + os.sep + r'data/S12-18_GML/train_passenger.csv'
+file_name = os.path.join(os.getcwd(),'data','S12-18_GML','train_passenger.csv')
 df = pd.read_csv(file_name,sep='\t')
-
-
 
 #for population
 geodf = []
 # for pref_num in range(8,15,1):
 for pref_num in [13]:
     pref_num = str(pref_num).zfill(2)
-    pop_shp = r'data/1km_mesh_suikei_2018_shape_' + pref_num + r'/1km_mesh_2018_' + pref_num + '.shp'
+    pop_shp = os.path.join(os.getcwd(),'data','1km_mesh_suikei_2018_shape_' + pref_num,'1km_mesh_2018_' + pref_num + '.shp')
     if len(geodf)==0:
         geodf = gpd.read_file(pop_shp)
     else:
         tmp_geodf = gpd.read_file(pop_shp)
         geodf = pd.concat([geodf,tmp_geodf])
 
-pop_geojson = r'data\1km_mesh.geojson'
+pop_geojson = os.path.join(os.getcwd(),'data','1km_mesh.geojson')
 if os.path.exists(pop_geojson)==False:
     geodf.to_file(pop_geojson, driver = "GeoJSON")
 
@@ -58,8 +56,14 @@ colors = {
     'background': '#111111',
     'text': '#7FDBFF',
 }
+styles = {
+    'pre': {
+        'border': 'thin lightgrey solid',
+        'overflowX': 'scroll'
+    }
+}
 
-populatoin_passenger_app.layout = html.Div(children=[
+population_passenger_app.layout = html.Div(children=[
         html.Div(children=[
             html.H1(
                 children='Population and Train Passengers',
@@ -95,17 +99,84 @@ populatoin_passenger_app.layout = html.Div(children=[
                 marks={i: i for i in range(2011,2018,1)},
                 value=[2016,2017]
             )),
-        ],style={'backgroundColor': colors['background']}),
+        ],
+        
+        
+        
+        style={'backgroundColor': colors['background']}),
 
         html.Div(children=[
             dcc.Loading(
                 id="loading-1",
-                children=[html.Div(dcc.Graph(id='population-passenger-graph'))],
+                children=[html.Div(dcc.Graph(id='population-passenger-graph')),
+                ],
                 type="default",
                 ),
-            
 
-        ]),
+        html.Div(className='row', children=[
+                html.Div([
+                    dcc.Markdown("""
+                        **Hover Data**
+
+                        Mouse over values in the graph.
+                    """),
+                    html.Pre(id='hover-data', style=styles['pre'])
+                ], className='three columns'),
+
+                html.Div([
+                    dcc.Markdown("""
+                        **Click Data**
+
+                        Click on points in the graph.
+                    """),
+                    html.Pre(id='click-data', style=styles['pre']),
+                ], className='three columns'),
+
+                html.Div([
+                    dcc.Markdown("""
+                        **Selection Data**
+
+                        Choose the lasso or rectangle tool in the graph's menu
+                        bar and then select points in the graph.
+
+                        Note that if `layout.clickmode = 'event+select'`, selection data also 
+                        accumulates (or un-accumulates) selected data if you hold down the shift
+                        button while clicking.
+                    """),
+                    html.Pre(id='selected-data', style=styles['pre']),
+                ], className='three columns'),
+
+                html.Div([
+                    dcc.Markdown("""
+                        **Zoom and Relayout Data**
+
+                        Click and drag on the graph to zoom or click on the zoom
+                        buttons in the graph's menu bar.
+                        Clicking on legend items will also fire
+                        this event.
+                    """),
+                    html.Pre(id='relayout-data', style=styles['pre']),
+                ], className='three columns')
+            ])
+
+        ],
+        
+        
+        
+        
+        
+        ),
+
+        # html.Div(className='row', children=[
+        #     html.Div([
+        #         dcc.Markdown("""
+        #             **Hover Data**
+
+        #             Mouse over values in the graph.
+        #         """),
+        #         html.Pre(id='hover-data', style=styles['pre'])
+        #     ], className='three columns'),
+        # ]),
     ],
 )
 color1 = "rgb(156, 181, 255)"
@@ -149,7 +220,7 @@ colorscale_passenger = [
             [1.00, color6],
             ]
 
-@populatoin_passenger_app.callback(
+@population_passenger_app.callback(
     Output('population-passenger-graph', 'figure'),
     [Input('year_population', 'value'),
      Input('year_passenger', 'value')])
@@ -202,7 +273,31 @@ def update_glagh(year_population,year_passsenger):
 
     fig.update_layout(mapbox_style="carto-positron",
                     mapbox_zoom=8, mapbox_center = {"lat": 35.7, "lon": 139.7},
-                    height = 800)
+                    height = 600)
     return fig
 
-# populatoin_passenger_app.run_server()
+@population_passenger_app.callback(
+    Output('hover-data', 'children'),
+    [Input('population-passenger-graph', 'hoverData')])
+def display_hover_data(hoverData):
+    return json.dumps(hoverData, indent=2)
+
+@population_passenger_app.callback(
+    Output('click-data', 'children'),
+    [Input('population-passenger-graph', 'clickData')])
+def display_click_data(clickData):
+    return json.dumps(clickData, indent=2)
+
+@population_passenger_app.callback(
+    Output('selected-data', 'children'),
+    [Input('population-passenger-graph', 'selectedData')])
+def display_selected_data(selectedData):
+    return json.dumps(selectedData, indent=2)
+
+@population_passenger_app.callback(
+    Output('relayout-data', 'children'),
+    [Input('population-passenger-graph', 'relayoutData')])
+def display_relayout_data(relayoutData):
+    return json.dumps(relayoutData, indent=2)
+
+# population_passenger_app.run_server()

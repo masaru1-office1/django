@@ -24,8 +24,8 @@ SECRET_KEY = 'pkg5+--&-k0=o5*up^+bw7_%)+n59q3+pvy=wohe_red#n!(5('
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['34.70.194.22']
-#ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = ['34.70.194.22']
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
